@@ -29,7 +29,7 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 AUTHENTICATION_BACKENDS = [
-    'warrant.django.backend.CognitoBackend',
+    'django_warrant.backend.CognitoBackend',
     'django.contrib.auth.backends.ModelBackend'
 ]
 
@@ -65,7 +65,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'warrant.django',
+    'django_warrant',
     'crispy_forms',
     'django_extensions'
 ]
