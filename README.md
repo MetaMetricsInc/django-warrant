@@ -13,7 +13,7 @@ each backend listed, in the order listed until successful.
 
     ```python
     AUTHENTICATION_BACKENDS = [
-        'warrant.django.backend.CognitoBackend',
+        'django_warrant.backend.CognitoBackend',
         ...
     ]
     ```
