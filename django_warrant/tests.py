@@ -16,7 +16,7 @@ from django.test.client import RequestFactory
 from django.utils.six import iteritems
 
 from django_warrant.backend import CognitoBackend, CognitoUser
-from django_warrant.django.middleware import APIKeyMiddleware
+from django_warrant.middleware import APIKeyMiddleware
 from warrant import Cognito
 
 def set_tokens(cls, *args, **kwargs):

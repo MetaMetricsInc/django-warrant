@@ -10,7 +10,7 @@ from django.views.generic.list import MultipleObjectMixin, ListView
 
 from django.conf import settings
 from warrant import UserObj, Cognito
-from warrant.django.forms import APIKeySubscriptionForm
+from django_warrant.forms import APIKeySubscriptionForm
 
 
 class GetCognitoUserMixin(object):

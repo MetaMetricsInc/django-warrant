@@ -4,8 +4,8 @@ from django.views.generic import FormView, TemplateView
 from django.contrib import messages
 from django.conf import settings
 
-from warrant.django.utils import get_cognito
-from warrant.django.forms import ProfileForm
+from django_warrant.utils import get_cognito
+from django_warrant.forms import ProfileForm
 
 
 class TokenMixin(AccessMixin):
