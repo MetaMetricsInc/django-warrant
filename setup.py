@@ -7,7 +7,7 @@ install_reqs = parse_requirements('requirements.txt', session=False)
 
 version = '0.1.0'
 
-README="""Python class to integrate Boto3's Cognito client so it is easy to login users. With SRP support."""
+README="""Django library that uses the warrant python utility library to provide authentication via AWS Cognito."""
 
 setup(
     name='warrant',
@@ -15,16 +15,17 @@ setup(
     description=README,
     long_description=README,
     classifiers=[
+        'Framework :: Django',
+        'Framework :: Django :: 1.10',
         "Programming Language :: Python",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Environment :: Web Environment",
     ],
-    keywords='aws,cognito,api,gateway,capless',
-    author='Capless.io',
-    author_email='opensource@capless.io',
-    maintainer='Brian Jinwright',
+    keywords='aws,cognito,api,gateway,django',
+    author='MetaMetrics',
+    author_email='engineering@lexile.com',
     packages=find_packages(exclude=('cdu',)),
-    url='https://github.com/capless/warrant',
+    url='https://github.com/MetaMetricsInc/django-warrant',
     license='GNU GPL V3',
     install_requires=[str(ir.req) for ir in install_reqs],
     include_package_data=True,
