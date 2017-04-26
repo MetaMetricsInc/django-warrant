@@ -10,7 +10,7 @@ version = '0.1.0'
 README="""Django library that uses the warrant python utility library to provide authentication via AWS Cognito."""
 
 setup(
-    name='warrant',
+    name='django-warrant',
     version=version,
     description=README,
     long_description=README,
