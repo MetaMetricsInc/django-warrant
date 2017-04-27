@@ -217,7 +217,7 @@ class AuthTests(TransactionTestCase):
         self.assertEqual(updated_user.email, user.email)
         self.assertEqual(updated_user.id, user.id)
 
-    @override_settings(CREATE_UNKNOWN_USERS=False)
+    @override_settings(COGNITO_CREATE_UNKNOWN_USERS=False)
     @patch.object(Cognito, 'authenticate')
     @patch.object(Cognito, 'get_user') 
     def test_existing_user_updated_disabled_create_unknown_user(self, mock_get_user, mock_authenticate):
@@ -237,7 +237,7 @@ class AuthTests(TransactionTestCase):
         self.assertEqual(updated_user.email, user.email)
         self.assertEqual(updated_user.id, user.id)
 
-    @override_settings(CREATE_UNKNOWN_USERS=False)
+    @override_settings(COGNITO_CREATE_UNKNOWN_USERS=False)
     @patch.object(Cognito, 'authenticate')
     @patch.object(Cognito, 'get_user') 
     def test_user_not_found_disabled_create_unknown_user(self, mock_get_user, mock_authenticate):

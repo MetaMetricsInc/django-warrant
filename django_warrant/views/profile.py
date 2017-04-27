@@ -1,5 +1,8 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, AccessMixin
-from django.urls import reverse_lazy
+try:
+    from django.urls import reverse_lazy
+except ImportError:
+    from django.core.urlresolvers import reverse_lazy
 from django.views.generic import FormView, TemplateView
 from django.contrib import messages
 from django.conf import settings
@@ -12,6 +15,7 @@ class TokenMixin(AccessMixin):
 
     def dispatch(self, request, *args, **kwargs):
         if not request.session.get('REFRESH_TOKEN'):
+            print('Got Here')
             return self.handle_no_permission()
         return super(TokenMixin, self).dispatch(
             request, *args, **kwargs)

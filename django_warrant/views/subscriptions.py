@@ -4,7 +4,10 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, \
     UserPassesTestMixin
 from django.http import Http404
-from django.urls import reverse_lazy
+try:
+    from django.urls import reverse_lazy
+except ImportError:
+    from django.core.urlresolvers import reverse_lazy
 from django.views.generic import FormView
 from django.views.generic.list import MultipleObjectMixin, ListView
 
