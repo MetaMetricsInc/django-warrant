@@ -13,7 +13,7 @@
             <td>{{ obj.username}}</td>
             <td>{{ obj.first_name }}</td>
             <td>{{ obj.last_name }}</td>
-            <td><a href="{% url 'admin-cognito-user' obj.username %}" class="btn btn-success">View</a></td>
+            <td><a href="{% url 'dw:admin-cognito-user' obj.username %}" class="btn btn-success">View</a></td>
         </tr>
     {% endfor %}
     </table>

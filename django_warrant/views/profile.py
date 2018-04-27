@@ -1,10 +1,14 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, AccessMixin
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
+
 try:
     from django.urls import reverse_lazy
 except ImportError:
     from django.core.urlresolvers import reverse_lazy
 from django.views.generic import FormView, TemplateView
 from django.contrib import messages
+from django.contrib.auth.views import LogoutView as DJLogoutView
 from django.conf import settings
 
 from django_warrant.utils import get_cognito
@@ -15,7 +19,6 @@ class TokenMixin(AccessMixin):
 
     def dispatch(self, request, *args, **kwargs):
         if not request.session.get('REFRESH_TOKEN'):
-            print('Got Here')
             return self.handle_no_permission()
         return super(TokenMixin, self).dispatch(
             request, *args, **kwargs)
@@ -25,6 +28,7 @@ class GetUserMixin(object):
     def get_user(self):
         c = get_cognito(self.request)
         return c.get_user(attr_map=settings.COGNITO_ATTR_MAPPING)
+
 
 class ProfileView(LoginRequiredMixin,TokenMixin,GetUserMixin,TemplateView):
     template_name = 'warrant/profile.html'
@@ -40,14 +44,23 @@ class UpdateProfileView(LoginRequiredMixin,TokenMixin,GetUserMixin,FormView):
     form_class = ProfileForm
 
     def get_success_url(self):
-        return reverse_lazy('update-profile')
+        return reverse_lazy('dw:profile')
 
     def get_initial(self):
         u = self.get_user()
-        return u.__dict__
+        return u.__dict__.get('_data')
     
     def form_valid(self, form):
         c = get_cognito(self.request)
         c.update_profile(form.cleaned_data,settings.COGNITO_ATTR_MAPPING)
         messages.success(self.request,'You have successfully updated your profile.')
         return super(UpdateProfileView, self).form_valid(form)
+
+
+class LogoutView(DJLogoutView):
+
+    @method_decorator(never_cache)
+    def dispatch(self, request, *args, **kwargs):
+        request.session.delete()
+        return super(LogoutView, self).dispatch(request, *args, **kwargs)
+

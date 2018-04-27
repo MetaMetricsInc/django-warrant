@@ -3,7 +3,6 @@ import abc
 
 from boto3.exceptions import Boto3Error
 from botocore.exceptions import ClientError
-from django import VERSION as DJANGO_VERSION
 from django.conf import settings
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model
@@ -94,26 +93,17 @@ class AbstractCognitoBackend(ModelBackend):
         raise error
 
 
-if DJANGO_VERSION[1] > 10:
-    class CognitoBackend(AbstractCognitoBackend):
-        def authenticate(self, request, username=None, password=None):
-            """
-            Authenticate a Cognito User and store an access, ID and
-            refresh token in the session.
-            """
-            user = super(CognitoBackend, self).authenticate(
-                username=username, password=password)
-            if user:
-                request.session['ACCESS_TOKEN'] = user.access_token
-                request.session['ID_TOKEN'] = user.id_token
-                request.session['REFRESH_TOKEN'] = user.refresh_token
-                request.session.save()
-            return user
-else:
-    class CognitoBackend(AbstractCognitoBackend):
-        def authenticate(self, username=None, password=None):
-            """
-            Authenticate a Cognito User
-            """
-            return super(CognitoBackend, self).authenticate(
-                username=username, password=password)
+class CognitoBackend(AbstractCognitoBackend):
+    def authenticate(self, request, username=None, password=None):
+        """
+        Authenticate a Cognito User and store an access, ID and
+        refresh token in the session.
+        """
+        user = super(CognitoBackend, self).authenticate(
+            username=username, password=password)
+        if user:
+            request.session['ACCESS_TOKEN'] = user.access_token
+            request.session['ID_TOKEN'] = user.id_token
+            request.session['REFRESH_TOKEN'] = user.refresh_token
+            request.session.save()
+        return user

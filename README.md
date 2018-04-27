@@ -61,7 +61,7 @@ Upon successful login, the three identity tokens returned from Cognito
 session. In Django >= 1.11, this is done directly in the backend class.
 Otherwise, this is done via the `user_logged_in` signal.
 
-Check the django/demo directory for an example app with a login and
+Check the cdu directory for an example app with a login and
 user details page.
 
 #### Customizing CognitoBackend Behavior

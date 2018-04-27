@@ -44,13 +44,13 @@
         </div>
         <div id="navbar" class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
-            <li><a href="{% url 'profile' %}">My Profile</a></li>
-                            <li><a href="{% url 'update-profile' %}">Update your Profile</a></li>
-                            <li><a href="{% url 'subscriptions' %}">My Subscriptions</a></li>
+            <li><a href="{% url 'dw:profile' %}">My Profile</a></li>
+                            <li><a href="{% url 'dw:update-profile' %}">Update your Profile</a></li>
+                            <li><a href="{% url 'dw:subscriptions' %}">My Subscriptions</a></li>
                             {% if request.user.is_authenticated %}
-                                <li><a href="{% url 'logout' %}">Logout</a></li>
+                                <li><a href="{% url 'dw:logout' %}">Logout</a></li>
                             {% else %}
-                                <li><a href="{% url 'login' %}">Login</a></li>
+                                <li><a href="{% url 'dw:login' %}">Login</a></li>
                             {% endif %}
           </ul>
         </div><!--/.nav-collapse -->

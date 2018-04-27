@@ -59,7 +59,8 @@ class AdminSubscriptions(UserPassesTestMixin,GetCognitoUserMixin,
     form_class = APIKeySubscriptionForm
 
     def get_success_url(self):
-        return reverse_lazy('admin-cognito-user',args=[self.kwargs.get('username')])
+        return reverse_lazy('dw:admin-cognito-user',
+                            args=[self.kwargs.get('username')])
 
     def test_func(self):
         return self.request.user.has_perm('can_edit')
