@@ -27,7 +27,7 @@ class CognitoUser(Cognito):
         user_attrs = cognito_to_dict(attribute_list,CognitoUser.COGNITO_ATTR_MAPPING)
         django_fields = [f.name for f in CognitoUser.user_class._meta.get_fields()]
         extra_attrs = {}
-        for k, v in user_attrs.items():
+        for k in list(user_attrs):
             if k not in django_fields:
                 extra_attrs.update({k: user_attrs.pop(k, None)})
         if getattr(settings, 'COGNITO_CREATE_UNKNOWN_USERS', True):
