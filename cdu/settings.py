@@ -41,12 +41,20 @@ COGNITO_USER_POOL_ID = env('COGNITO_USER_POOL_ID')
 
 COGNITO_APP_ID = env('COGNITO_APP_ID')
 
+COGNITO_CLIENT_SECRET = env('COGNITO_CLIENT_SECRET')
+
 COGNITO_ATTR_MAPPING = env(
     'COGNITO_ATTR_MAPPING',
     {
         'email': 'email',
         'given_name': 'first_name',
         'family_name': 'last_name',
+        'username':'username',
+        'address':'address',
+        'gender':'gender',
+        'preferred_username':'preferred_username',
+        'phone_number':'phone_number',
+        'phone_number_verified':'phone_number_verified',
         'custom:api_key': 'api_key',
         'custom:api_key_id': 'api_key_id'
     },

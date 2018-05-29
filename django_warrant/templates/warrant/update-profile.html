@@ -1,8 +1,8 @@
 {% extends 'warrant/base.html' %}
 {% load crispy_forms_tags %}
-
+{% block h1_title %}Update Your Profile{% endblock h1_title %}
 {% block main_content %}
-    <form action="." method="post" class="form">
+    <form action="" method="post" class="form">
     {% csrf_token %}
     {{ form|crispy }}
     <input type="submit" class="btn btn-primary">

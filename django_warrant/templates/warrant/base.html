@@ -43,23 +43,37 @@
           <a class="navbar-brand" href="#">{% block nav_title %}Warrant{% endblock %}</a>
         </div>
         <div id="navbar" class="collapse navbar-collapse">
-          <ul class="nav navbar-nav">
-            <li><a href="{% url 'dw:profile' %}">My Profile</a></li>
-                            <li><a href="{% url 'dw:update-profile' %}">Update your Profile</a></li>
-                            <li><a href="{% url 'dw:subscriptions' %}">My Subscriptions</a></li>
-                            {% if request.user.is_authenticated %}
-                                <li><a href="{% url 'dw:logout' %}">Logout</a></li>
-                            {% else %}
-                                <li><a href="{% url 'dw:login' %}">Login</a></li>
-                            {% endif %}
+            <ul class="nav navbar-nav">
+                <li><a href="{% url 'dw:profile' %}">My Profile</a></li>
+                <li><a href="{% url 'dw:subscriptions' %}">My Subscriptions</a></li>
+                <li><a href="{% url 'dw:update-profile' %}">Update your Profile</a></li>
+
+            {% if request.user.is_authenticated %}
+                <li><a href="{% url 'dw:logout' %}">Logout</a></li>
+            {% else %}
+                <li><a href="{% url 'dw:login' %}">Login</a></li>
+            {% endif %}
           </ul>
         </div><!--/.nav-collapse -->
       </div>
     </nav>
+        {% if messages %}
 
+{% endif %}
       {% block body %}
         {% block content %}
             <div class="container" id="main-container">
+               {% for message in messages %}
+<div class="alert mt20 alert{% if message.tags %}-{{message.tags}}{% endif %}">
+  <a class="close" data-dismiss="alert">×</a>
+  {{message}}
+</div>
+{% endfor %}
+            <div class="row">
+                <div class="col-md-12">
+                    <h1>{% block h1_title %}{% endblock h1_title %}</h1>
+                </div>
+            </div>
                 <div class="row">
 
                     <div class="col-md-12">

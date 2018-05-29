@@ -1,6 +1,9 @@
+import boto3
 from django.conf import settings
-from warrant import Cognito
 
+
+apigw_client = boto3.client('apigateway')
+cog_client = boto3.client('cognito-idp')
 
 def cognito_to_dict(attr_list,mapping):
     user_attrs = dict()
@@ -11,6 +14,14 @@ def cognito_to_dict(attr_list,mapping):
             user_attrs[name] = value
     return user_attrs
 
+def dict_to_cognito(attr_dict,mapping):
+    cognito_list = list()
+    inv_map = {v: k for k, v in mapping.items()}
+    for k,v in attr_dict.items():
+        name = inv_map.get(k)
+        cognito_list.append({'Name':name,'Value':v})
+    return cognito_list
+
 def user_obj_to_django(user_obj):
     c_attrs = settings.COGNITO_ATTR_MAPPING
     user_attrs = dict()
@@ -20,17 +31,4 @@ def user_obj_to_django(user_obj):
             user_attrs[dk] = v
     return user_attrs
 
-def get_cognito(request):
-
-    c = Cognito(settings.COGNITO_USER_POOL_ID,settings.COGNITO_APP_ID,
-                access_token=request.session.get('ACCESS_TOKEN'),
-                id_token=request.session.get('ID_TOKEN'),
-                refresh_token=request.session.get('REFRESH_TOKEN'))
-    changed = c.check_token()
-    if changed:
-        request.session['ACCESS_TOKEN'] = c.access_token
-        request.session['REFRESH_TOKEN'] = c.refresh_token
-        request.session['ID_TOKEN'] = c.id_token
-        request.session.save()
-    return c
 
