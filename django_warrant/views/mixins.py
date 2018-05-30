@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin, \
     UserPassesTestMixin, AccessMixin
 
-from django_warrant.models import UserObj
+from django_warrant.models import UserObj, get_user
 from django_warrant.utils import cog_client, apigw_client
 
 
@@ -15,9 +15,7 @@ class AdminMixin(LoginRequiredMixin,UserPassesTestMixin):
 class GetUserMixin(object):
 
     def get_user(self):
-        return UserObj(cog_client.get_user(
-            AccessToken=self.request.session['ACCESS_TOKEN']),
-            request=self.request)
+        return get_user(self.request)
 
     def admin_get_user(self,username):
         return UserObj(cog_client.admin_get_user(

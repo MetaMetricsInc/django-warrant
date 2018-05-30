@@ -1,9 +1,11 @@
 import boto3
 from django.conf import settings
+from warrant_lite import WarrantLite
 
 
 apigw_client = boto3.client('apigateway')
 cog_client = boto3.client('cognito-idp')
+
 
 def cognito_to_dict(attr_list,mapping):
     user_attrs = dict()
@@ -14,6 +16,7 @@ def cognito_to_dict(attr_list,mapping):
             user_attrs[name] = value
     return user_attrs
 
+
 def dict_to_cognito(attr_dict,mapping):
     cognito_list = list()
     inv_map = {v: k for k, v in mapping.items()}
@@ -21,6 +24,7 @@ def dict_to_cognito(attr_dict,mapping):
         name = inv_map.get(k)
         cognito_list.append({'Name':name,'Value':v})
     return cognito_list
+
 
 def user_obj_to_django(user_obj):
     c_attrs = settings.COGNITO_ATTR_MAPPING
@@ -32,3 +36,27 @@ def user_obj_to_django(user_obj):
     return user_attrs
 
 
+def refresh_access_token(request):
+    """
+    Sets a new access token on the User using the refresh token.
+    """
+    username = request.user.username
+    refresh_token = request.session['REFRESH_TOKEN']
+    auth_params = {'REFRESH_TOKEN': refresh_token}
+    if settings.COGNITO_CLIENT_SECRET:
+        auth_params['SECRET_HASH'] = WarrantLite.get_secret_hash(username,
+                                        settings.COGNITO_APP_ID,
+                                        settings.COGNITO_CLIENT_SECRET)
+    refresh_response = cog_client.initiate_auth(
+        ClientId=settings.COGNITO_APP_ID,
+        AuthFlow='REFRESH_TOKEN',
+        AuthParameters=auth_params,
+    )
+    request.session['ACCESS_TOKEN'] = refresh_response['AuthenticationResult']['AccessToken']
+    request.session['ID_TOKEN'] = refresh_response['AuthenticationResult']['IdToken']
+    request.session.save()
+    return {
+            'access_token': refresh_response['AuthenticationResult']['AccessToken'],
+            'id_token': refresh_response['AuthenticationResult']['IdToken'],
+            'token_type': refresh_response['AuthenticationResult']['TokenType']
+        }

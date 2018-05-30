@@ -3,8 +3,8 @@ import datetime
 from django.conf import settings
 from jose import jwt
 
-from django_warrant.utils import cognito_to_dict, dict_to_cognito, cog_client
-
+from django_warrant.utils import cognito_to_dict, dict_to_cognito, cog_client, refresh_access_token
+from botocore.exceptions import BotoCoreError
 
 class UserObj(object):
 
@@ -113,3 +113,14 @@ class UserObj(object):
             Username=self.username
         )
         return
+
+def get_user(request):
+    try:
+        return UserObj(cog_client.get_user(
+            AccessToken=request.session['ACCESS_TOKEN']),
+            request=request)
+    except Exception:
+        refresh_access_token(request)
+        return UserObj(cog_client.get_user(
+            AccessToken=request.session['ACCESS_TOKEN']),
+            request=request)
