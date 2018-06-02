@@ -1,5 +1,6 @@
 {% extends 'warrant/form.html' %}
 {% block title %}Login{% endblock title %}
+{% block h1_title %}Login{% endblock %}
 {% block extra_form_info %}
-    <a href="{% url 'dw:forgot-password' %}">Forgot Password</a> | <a href="">Sign Up</a>
+    <a href="{% url 'dw:forgot-password' %}">Forgot Password</a> | <a href="{% url 'dw:register' %}">Sign Up</a>
 {% endblock %}

@@ -29,8 +29,7 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 AUTHENTICATION_BACKENDS = [
-    'django_warrant.backend.CognitoBackend',
-    'django.contrib.auth.backends.ModelBackend'
+    'django_warrant.backend.CognitoNoModelBackend'
 ]
 
 COGNITO_TEST_USERNAME = env('COGNITO_TEST_USERNAME')
@@ -49,6 +48,7 @@ COGNITO_ATTR_MAPPING = env(
         'email': 'email',
         'given_name': 'first_name',
         'family_name': 'last_name',
+        'name':'name',
         'username':'username',
         'address':'address',
         'gender':'gender',
@@ -83,7 +83,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_warrant.middleware.CognitoAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -162,3 +162,5 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
+
+# AUTH_USER_MODEL = 'django_warrant.UserObj'

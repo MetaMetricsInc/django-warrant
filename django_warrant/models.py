@@ -4,11 +4,33 @@ from django.conf import settings
 from jose import jwt
 
 from django_warrant.utils import cognito_to_dict, dict_to_cognito, cog_client, refresh_access_token
-from botocore.exceptions import BotoCoreError
+
+
+class Meta(object):
+
+    def __init__(self,pk):
+        self.pk = pk
+
+class PK(object):
+
+    def __init__(self,sub):
+        self.value = sub
+
+    def value_to_string(self,obj):
+        return self.value
+
+    def to_python(self,obj):
+        return obj
+
+
+class AnonUserObj(object):
+    is_authenticated = False
+
 
 class UserObj(object):
 
-    def __init__(self, attribute_list, metadata=None, request=None):
+    def __init__(self, attribute_list, metadata=None, request=None,
+                 password_hash=None,access_token=None,is_authenticated=False):
         """
         :param attribute_list:
         :param metadata: Dictionary of User metadata
@@ -19,15 +41,20 @@ class UserObj(object):
         self._data = cognito_to_dict(
             attribute_list.get('UserAttributes')
             or attribute_list.get('Attributes'),self._attr_map)
-
+        self.is_authenticated = is_authenticated
         self.sub = self._data.pop('sub',None)
+        self.pk = self.sub
+        self.id = self.sub
         self.email_verified = self._data.pop('email_verified',None)
         self.phone_number_verified = self._data.pop('phone_number_verified',None)
         self._metadata = {} if metadata is None else metadata
+        self._meta = Meta(PK(self._data.get('sub')))
         if request:
             self.access_token = request.session['ACCESS_TOKEN']
             self.refresh_token = request.session['REFRESH_TOKEN']
             self.id_token = request.session['ID_TOKEN']
+        elif access_token:
+            self.access_token = access_token
 
     def __repr__(self):
         return '<{class_name}: {uni}>'.format(
@@ -47,6 +74,13 @@ class UserObj(object):
             self._data[name] = value
         else:
             super(UserObj, self).__setattr__(name, value)
+
+    @property
+    def is_active(self):
+        return self._data.get('email')
+
+    def get_session_auth_hash(self):
+        return self.session_auth_hash
 
     def check_token(self, renew=True):
         """
@@ -85,7 +119,7 @@ class UserObj(object):
         self.token_type = refresh_response['AuthenticationResult']['TokenType']
 
 
-    def save(self,admin=False,create=False,password=None):
+    def save(self,admin=False,create=False,password=None,update_fields=None):
         if not create:
             if admin:
                 cog_client.admin_update_user_attributes(
@@ -115,12 +149,14 @@ class UserObj(object):
         return
 
 def get_user(request):
+    if not request.session.get('ACCESS_TOKEN'):
+        return AnonUserObj()
     try:
         return UserObj(cog_client.get_user(
             AccessToken=request.session['ACCESS_TOKEN']),
-            request=request)
+            request=request,is_authenticated=True)
     except Exception:
         refresh_access_token(request)
         return UserObj(cog_client.get_user(
             AccessToken=request.session['ACCESS_TOKEN']),
-            request=request)
+            request=request,is_authenticated=True)

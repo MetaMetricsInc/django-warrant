@@ -6,8 +6,10 @@ from botocore.exceptions import ClientError
 from django.conf import settings
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model
+from django.utils.crypto import salted_hmac
 from warrant_lite import WarrantLite
 
+from django_warrant.models import UserObj
 from .utils import cognito_to_dict
 
 
@@ -105,7 +107,7 @@ class CognitoBackend(AbstractCognitoBackend):
         return user
 
 
-class CognitoNoModelBackend(object):
+class CognitoNoModelBackend(ModelBackend):
 
     def authenticate(self, request, username=None, password=None):
         wl = WarrantLite(username=username, password=password,
@@ -124,12 +126,35 @@ class CognitoNoModelBackend(object):
         wl.verify_token(access_token, 'access_token', 'access')
         wl.verify_token(id_token, 'id_token', 'id')
 
-        user = wl.client.get_user(
+        user = UserObj(wl.client.get_user(
             AccessToken=access_token
-        )
+        ),access_token=access_token,is_authenticated=True)
+        user.refresh_token = refresh_token
+        user.access_token = access_token
+        user.id_token = id_token
+        user.session_auth_hash = get_session_auth_hash(password)
         if user:
             request.session['ACCESS_TOKEN'] = user.access_token
             request.session['ID_TOKEN'] = user.id_token
             request.session['REFRESH_TOKEN'] = user.refresh_token
             request.session.save()
         return user
+
+    def user_can_authenticate(self, user):
+        """
+        Reject users with is_active=False. Custom user models that don't have
+        that attribute are allowed.
+        """
+        is_active = getattr(user, 'is_active', None)
+        return is_active or is_active is None
+
+    def get_user(self,user_id):
+        pass
+    
+
+def get_session_auth_hash(password):
+    """
+    Return an HMAC of the password field.
+    """
+    key_salt = "django.contrib.auth.models.AbstractBaseUser.get_session_auth_hash"
+    return salted_hmac(key_salt, password).hexdigest()

@@ -6,7 +6,7 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 
-from django_warrant.utils import cog_client
+from django_warrant.utils import cog_client, dict_to_cognito
 from django_warrant.views.mixins import GetUserMixin, TokenMixin
 
 try:
@@ -18,7 +18,8 @@ from django.contrib import messages
 from django.contrib.auth.views import LogoutView as DJLogoutView
 
 
-from django_warrant.forms import ProfileForm, ForgotPasswordForm, ConfirmForgotPasswordForm
+from django_warrant.forms import ProfileForm, ForgotPasswordForm, ConfirmForgotPasswordForm, RegistrationForm, \
+    VerificationCodeForm, UpdatePasswordForm
 
 
 class ProfileView(LoginRequiredMixin,TokenMixin,GetUserMixin,TemplateView):
@@ -58,48 +59,108 @@ class LogoutView(DJLogoutView):
         return super(LogoutView, self).dispatch(request, *args, **kwargs)
 
 
-class ForgotPasswordView(FormView):
+class CognitoFormView(FormView):
+    success_message = None
+    client_error_field = None
+
+    def get_success_message(self,resp):
+        return self.success_message
+
+    def cognito_command(self,form):
+        return {}
+
+    def form_valid(self, form):
+        try:
+            resp = self.cognito_command(form)
+            messages.success(self.request,_(self.get_success_message(resp)))
+            return super(CognitoFormView, self).form_valid(form)
+        except ClientError as e:
+            form.add_error(self.client_error_field, e.response['Error']['Message'])
+            return self.form_invalid(form)
+
+
+class ForgotPasswordView(CognitoFormView):
     template_name = 'warrant/forgot-password.html'
     form_class = ForgotPasswordForm
     success_url = reverse_lazy('dw:confirm-forgot-password')
+    success_message = 'Confirmation code delivered to {} by {}'
+    client_error_field = 'username'
 
-    def form_valid(self, form):
-        try:
-            resp = cog_client.forgot_password(
-                ClientId=settings.COGNITO_APP_ID,
-                Username=form.cleaned_data['username']
-            )['CodeDeliveryDetails']
+    def cognito_command(self,form):
+        return cog_client.forgot_password(
+            ClientId=settings.COGNITO_APP_ID,
+            Username=form.cleaned_data['username']
+        )
 
-            messages.success(self.request,
-                _('Confirmation code delivered to {} by {}'.format(
-                    resp['Destination'],resp['DeliveryMedium'])))
-            return super(ForgotPasswordView, self).form_valid(form)
-        except ClientError:
-            form.add_error('username',_('That user does not exist'))
-            return self.form_invalid(form)
+    def get_success_message(self,resp):
+        return _(self.success_message.format(
+            resp['CodeDeliveryDetails']['Destination'],
+            resp['CodeDeliveryDetails']['DeliveryMedium']
+        ))
 
 
-class ConfirmForgotPasswordView(FormView):
+class ConfirmForgotPasswordView(CognitoFormView):
     template_name = 'warrant/confirm-forgot-password.html'
     form_class = ConfirmForgotPasswordForm
     success_url = reverse_lazy('dw:profile')
+    success_message = 'You have successfully changed your password.'
 
-    def form_valid(self, form):
-        try:
-            resp = cog_client.confirm_forgot_password(
-                ClientId=settings.COGNITO_APP_ID,
-                Username=form.cleaned_data['username'],
-                ConfirmationCode=form.cleaned_data['verification_code'],
-                Password=form.cleaned_data['password']
-            )
-            if resp['ResponseMetadata']['HTTPStatusCode'] != 200:
-                messages.error(self.request,
-                    _('We could not verify either your verification code or username'))
-            else:
-                messages.success(self.request,
-                    _('You have successfully changed your password.'))
-            return super(ConfirmForgotPasswordView, self).form_valid(form)
-        except ClientError as e:
+    def cognito_command(self,form):
+        return cog_client.confirm_forgot_password(
+            ClientId=settings.COGNITO_APP_ID,
+            Username=form.cleaned_data['username'],
+            ConfirmationCode=form.cleaned_data['verification_code'],
+            Password=form.cleaned_data['password']
+        )
 
-            form.add_error('verification_code',e.response['Error']['Message'])
-            return self.form_invalid(form)
+
+class RegistrationView(CognitoFormView):
+    template_name = 'warrant/registration.html'
+    form_class = RegistrationForm
+    success_message = 'Confirmation code delivered to {} by {}'
+    success_url = reverse_lazy('dw:confirm-register')
+    def get_success_message(self,resp):
+        return _(self.success_message.format(
+            resp['CodeDeliveryDetails']['Destination'],
+            resp['CodeDeliveryDetails']['DeliveryMedium']
+        ))
+
+    def cognito_command(self,form):
+        cv = form.cleaned_data.copy()
+        cv.pop('confirm_password')
+        cv['name'] = '{} {}'.format(cv['first_name'],cv['last_name'])
+        return cog_client.sign_up(
+            ClientId=settings.COGNITO_APP_ID,
+            Username=cv.pop('username'),
+            Password=cv.pop('password'),
+            UserAttributes=dict_to_cognito(cv,
+                settings.COGNITO_ATTR_MAPPING)
+        )
+
+
+class ConfirmRegistrationView(CognitoFormView):
+    template_name = 'warrant/registration.html'
+    form_class = VerificationCodeForm
+    success_message = 'You have successfully registered.'
+    success_url = reverse_lazy('dw:profile')
+
+    def cognito_command(self,form):
+        return cog_client.confirm_sign_up(
+            ClientId=settings.COGNITO_APP_ID,
+            Username=form.cleaned_data['username'],
+            ConfirmationCode=form.cleaned_data['verification_code']
+        )
+
+
+class UpdatePasswordView(LoginRequiredMixin,TokenMixin,CognitoFormView):
+    template_name = 'warrant/update-profile.html'
+    form_class = UpdatePasswordForm
+    success_message = 'You have successfully changed your password.'
+    success_url = reverse_lazy('dw:profile')
+
+    def cognito_command(self,form):
+        return cog_client.change_password(
+            PreviousPassword=form.cleaned_data['previous_password'],
+            ProposedPassword=form.cleaned_data['proposed_password'],
+            AccessToken=self.request.session['ACCESS_TOKEN']
+        )
