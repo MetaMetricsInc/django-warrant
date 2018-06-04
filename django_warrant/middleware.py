@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.utils.deprecation import MiddlewareMixin
-from django.utils.functional import SimpleLazyObject
 from django_warrant.models import get_user as gu
+
 
 class APIKeyMiddleware(object):
     """
@@ -30,9 +30,7 @@ class APIKeyMiddleware(object):
 
 def get_user(request):
     if not hasattr(request, '_cached_user'):
-
         request._cached_user = gu(request)
-
     return request._cached_user
 
 

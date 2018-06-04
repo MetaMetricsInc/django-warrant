@@ -3,13 +3,32 @@ import datetime
 from django.conf import settings
 from jose import jwt
 
-from django_warrant.utils import cognito_to_dict, dict_to_cognito, cog_client, refresh_access_token, attr_map_inverse
+from django_warrant.utils import cognito_to_dict, dict_to_cognito, cog_client, \
+    refresh_access_token, attr_map_inverse
+
+
+class Group(object):
+
+    def __init__(self,attr_dict):
+        self._data = attr_dict
+
+    def __repr__(self):
+        return '<{class_name}: {uni}>'.format(
+            class_name=self.__class__.__name__, uni=self.__unicode__())
+
+    def __unicode__(self):
+        return self.username
+
+    def __getattr__(self, name):
+        if name in list(self.__dict__.get('_data',{}).keys()):
+            return self._data.get(name)
 
 
 class Meta(object):
 
     def __init__(self,pk):
         self.pk = pk
+
 
 class PK(object):
 
@@ -48,6 +67,7 @@ class UserObj(object):
         self.email_verified = self._data.pop('email_verified',None)
         self.phone_number_verified = self._data.pop('phone_number_verified',None)
         self._metadata = {} if metadata is None else metadata
+        self._cached_groups = None
         self._meta = Meta(PK(self._data.get('sub')))
         if request:
             self.access_token = request.session['ACCESS_TOKEN']
@@ -78,6 +98,26 @@ class UserObj(object):
                 self._data[name] = value
         else:
             super(UserObj, self).__setattr__(name, value)
+
+    @property
+    def groups(self):
+        if not self._cached_groups:
+            self._cached_groups = [Group(i) for i in
+                cog_client.admin_list_groups_for_user(
+                Username=self.username,
+                UserPoolId=settings.COGNITO_USER_POOL_ID,
+            ).get('Groups')]
+            return self._cached_groups
+        else:
+            return self._cached_groups
+
+    @property
+    def group_names(self):
+        return [i.GroupName for i in self.groups]
+
+    @property
+    def is_staff(self):
+        return settings.COGNITO_ADMIN_GROUP in self.group_names
 
     @property
     def is_active(self):
@@ -122,7 +162,6 @@ class UserObj(object):
         self.id_token = refresh_response['AuthenticationResult']['IdToken']
         self.token_type = refresh_response['AuthenticationResult']['TokenType']
 
-
     def save(self,admin=False,create=False,password=None,update_fields=None):
         if not create:
             if admin:
@@ -151,6 +190,7 @@ class UserObj(object):
             Username=self.username
         )
         return
+
 
 def get_user(request):
     if not request.session.get('ACCESS_TOKEN'):
