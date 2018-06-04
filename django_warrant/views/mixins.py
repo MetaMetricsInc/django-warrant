@@ -20,7 +20,7 @@ class GetUserMixin(object):
     def admin_get_user(self,username):
         return UserObj(cog_client.admin_get_user(
             UserPoolId=settings.COGNITO_USER_POOL_ID,
-            Username=username))
+            Username=username),is_authenticated=False)
 
 
 class TokenMixin(AccessMixin):

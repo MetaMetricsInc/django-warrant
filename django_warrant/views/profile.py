@@ -6,7 +6,7 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 
-from django_warrant.utils import cog_client, dict_to_cognito
+from django_warrant.utils import cog_client, dict_to_cognito, apigw_client
 from django_warrant.views.mixins import GetUserMixin, TokenMixin
 
 try:
@@ -69,9 +69,13 @@ class CognitoFormView(FormView):
     def cognito_command(self,form):
         return {}
 
+    def extra_command(self,form):
+        pass
+
     def form_valid(self, form):
         try:
             resp = self.cognito_command(form)
+            self.extra_command(form)
             messages.success(self.request,_(self.get_success_message(resp)))
             return super(CognitoFormView, self).form_valid(form)
         except ClientError as e:
@@ -138,7 +142,7 @@ class RegistrationView(CognitoFormView):
         )
 
 
-class ConfirmRegistrationView(CognitoFormView):
+class ConfirmRegistrationView(GetUserMixin,CognitoFormView):
     template_name = 'warrant/registration.html'
     form_class = VerificationCodeForm
     success_message = 'You have successfully registered.'
@@ -150,6 +154,17 @@ class ConfirmRegistrationView(CognitoFormView):
             Username=form.cleaned_data['username'],
             ConfirmationCode=form.cleaned_data['verification_code']
         )
+
+    def extra_command(self,form):
+        username = form.cleaned_data['username']
+        resp = apigw_client.create_api_key(
+            name=username,
+            description='Created by during registration by django-warrant'
+        )
+        u = self.admin_get_user(username)
+        u.api_key = resp['value']
+        u.api_key_id = resp['id']
+        u.save(admin=True)
 
 
 class UpdatePasswordView(LoginRequiredMixin,TokenMixin,CognitoFormView):

@@ -26,6 +26,13 @@ def dict_to_cognito(attr_dict,mapping):
     return cognito_list
 
 
+def attr_map_inverse():
+    attr_dict = settings.COGNITO_ATTR_MAPPING.copy()
+    attr_dict.pop('username')
+    attr_dict.pop('phone_number_verified')
+    return {v: k for k, v in attr_dict.items()}
+
+
 def user_obj_to_django(user_obj):
     c_attrs = settings.COGNITO_ATTR_MAPPING
     user_attrs = dict()
@@ -40,10 +47,11 @@ def refresh_access_token(request):
     """
     Sets a new access token on the User using the refresh token.
     """
-    username = request.user.username
+
     refresh_token = request.session['REFRESH_TOKEN']
     auth_params = {'REFRESH_TOKEN': refresh_token}
     if settings.COGNITO_CLIENT_SECRET:
+        username = request.user.username
         auth_params['SECRET_HASH'] = WarrantLite.get_secret_hash(username,
                                         settings.COGNITO_APP_ID,
                                         settings.COGNITO_CLIENT_SECRET)

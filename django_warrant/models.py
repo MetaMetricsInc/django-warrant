@@ -3,7 +3,7 @@ import datetime
 from django.conf import settings
 from jose import jwt
 
-from django_warrant.utils import cognito_to_dict, dict_to_cognito, cog_client, refresh_access_token
+from django_warrant.utils import cognito_to_dict, dict_to_cognito, cog_client, refresh_access_token, attr_map_inverse
 
 
 class Meta(object):
@@ -37,7 +37,7 @@ class UserObj(object):
         """
 
         self._attr_map = settings.COGNITO_ATTR_MAPPING
-        self.username = attribute_list.get('Username')
+        self.username = attribute_list['Username']
         self._data = cognito_to_dict(
             attribute_list.get('UserAttributes')
             or attribute_list.get('Attributes'),self._attr_map)
@@ -70,8 +70,12 @@ class UserObj(object):
             return self._metadata.get(name)
 
     def __setattr__(self, name, value):
-        if name in list(self.__dict__.get('_data',{}).keys()):
-            self._data[name] = value
+        if name in list(attr_map_inverse().keys()):
+            try:
+                self._data[name] = value
+            except TypeError:
+                self._data = {}
+                self._data[name] = value
         else:
             super(UserObj, self).__setattr__(name, value)
 
