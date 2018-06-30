@@ -8,6 +8,9 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model
 from django.utils.six import iteritems
 
+
+import magicattr
+
 from warrant import Cognito
 from .utils import cognito_to_dict
 
@@ -46,7 +49,8 @@ class CognitoUser(Cognito):
                     user = None
         if user:
             for k, v in extra_attrs.items():
-                setattr(user, k, v)
+                magicattr.set(user, k, v)
+            user.save()
         return user
 
 
