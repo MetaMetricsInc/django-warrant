@@ -17,7 +17,8 @@ from django_warrant.forms import APIKeySubscriptionForm
 
 
 class GetCognitoUserMixin(object):
-    client = boto3.client('apigateway')
+    region = settings.COGNITO_USER_POOL_ID.split('_')[0]
+    client = boto3.client('apigateway', region_name=region)
 
     def get_user_object(self):
         cog_client = boto3.client('cognito-idp')
