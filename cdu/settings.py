@@ -29,8 +29,7 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 AUTHENTICATION_BACKENDS = [
-    'django_warrant.backend.CognitoBackend',
-    'django.contrib.auth.backends.ModelBackend'
+    'django_warrant.backend.CognitoNoModelBackend'
 ]
 
 COGNITO_TEST_USERNAME = env('COGNITO_TEST_USERNAME')
@@ -39,7 +38,11 @@ COGNITO_TEST_PASSWORD = env('COGNITO_TEST_PASSWORD')
 
 COGNITO_USER_POOL_ID = env('COGNITO_USER_POOL_ID')
 
+COGNITO_ADMIN_GROUP = env('COGNITO_ADMIN_GROUP','Admins')
+
 COGNITO_APP_ID = env('COGNITO_APP_ID')
+
+COGNITO_CLIENT_SECRET = env('COGNITO_CLIENT_SECRET')
 
 COGNITO_ATTR_MAPPING = env(
     'COGNITO_ATTR_MAPPING',
@@ -47,6 +50,13 @@ COGNITO_ATTR_MAPPING = env(
         'email': 'email',
         'given_name': 'first_name',
         'family_name': 'last_name',
+        'name':'name',
+        'username':'username',
+        'address':'address',
+        'gender':'gender',
+        'preferred_username':'preferred_username',
+        'phone_number':'phone_number',
+        'phone_number_verified':'phone_number_verified',
         'custom:api_key': 'api_key',
         'custom:api_key_id': 'api_key_id'
     },
@@ -75,7 +85,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_warrant.middleware.CognitoAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -132,8 +142,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-LOGIN_REDIRECT_URL = '/accounts/profile'
-
+LOGIN_REDIRECT_URL = '/'
+LOGIN_URL = '/login/'
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/
 
@@ -154,3 +164,5 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
+
+# AUTH_USER_MODEL = 'django_warrant.UserObj'

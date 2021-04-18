@@ -7,6 +7,7 @@
             <th>First Name</th>
             <th>Last Name</th>
             <th></th>
+            <th></th>
         </tr>
     {% for obj in object_list %}
         <tr>
@@ -14,6 +15,7 @@
             <td>{{ obj.first_name }}</td>
             <td>{{ obj.last_name }}</td>
             <td><a href="{% url 'dw:admin-cognito-user' obj.username %}" class="btn btn-success">View</a></td>
+            <td><a href="{% url 'dw:admin-cognito-update-user' obj.username %}" class="btn btn-primary">Update</a></td>
         </tr>
     {% endfor %}
     </table>

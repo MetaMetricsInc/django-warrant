@@ -21,7 +21,7 @@ setup(
     long_description=README,
     classifiers=[
         'Framework :: Django',
-        'Framework :: Django :: 1.10',
+        'Framework :: Django :: 2.0',
         "Programming Language :: Python",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Environment :: Web Environment",

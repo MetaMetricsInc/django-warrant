@@ -15,14 +15,50 @@ from django.test import override_settings, TestCase, TransactionTestCase
 from django.test.client import RequestFactory
 from django.utils.six import iteritems
 
-from django_warrant.backend import CognitoBackend, CognitoUser
+from django_warrant.backend import CognitoBackend
 from django_warrant.middleware import APIKeyMiddleware
-from warrant import Cognito
+
 
 def set_tokens(cls, *args, **kwargs):
     cls.access_token = 'accesstoken'
     cls.id_token = 'idtoken'
     cls.refresh_token = 'refreshtoken'
+
+def authenticate_user(cls,*args, **kwargs):
+    return {
+        'ChallengeParameters': {},
+        'AuthenticationResult': {
+            'AccessToken': 'fake.access.token',
+            'ExpiresIn': 3600,
+            'TokenType': 'Bearer',
+            'RefreshToken': 'fake.refresh.token',
+            'IdToken': 'fake.id.token'},
+        'ResponseMetadata': {
+            'RequestId': 'abc123-1234-4567-789-9101112',
+            'HTTPStatusCode': 200,
+            'HTTPHeaders': {
+                'date': 'Thu, 10 May 2018 15:23:12 GMT',
+                'content-type': 'application/x-amz-json-1.1',
+                'content-length': '4056',
+                'connection': 'keep-alive',
+                'x-amzn-requestid': 'abc123-f233-sfsdf-k342334'},
+            'RetryAttempts': 0}
+        }
+
+def verify_tokens(cls,*args, **kwargs):
+    return {
+        'sub': 'asfadfadf-3323sd-sdt4-adf22-5dfgdfsaddf',
+        'event_id': 'sdf44sdsd-3234-9540-8a21-234sdfdsff',
+        'token_use': 'access',
+        'scope': 'aws.cognito.signin.user.admin',
+        'auth_time': 1525966559,
+        'iss': 'https://cognito-idp.us-east-1.amazonaws.com/us-east-1_Bgbf9cyLt',
+        'exp': 1525970159,
+        'iat': 1525966559,
+        'jti': '23ssdfsdf-tt44-5678-9fgv-345dfgdfgfdfgg',
+        'client_id': '7dsfsdfdsfdfgkdfkkd',
+        'username': 'fakeusername'
+    }
 
 def get_user(cls, *args, **kwargs):
     user = {

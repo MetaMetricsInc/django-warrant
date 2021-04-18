@@ -1,3 +1,7 @@
+from django.conf import settings
+from django.utils.deprecation import MiddlewareMixin
+from django_warrant.models import get_user as gu
+
 
 class APIKeyMiddleware(object):
     """
@@ -22,3 +26,20 @@ class APIKeyMiddleware(object):
             request.api_key = request.META['HTTP_AUTHORIZATION_ID']
 
         return None
+
+
+def get_user(request):
+    if not hasattr(request, '_cached_user'):
+        request._cached_user = gu(request)
+    return request._cached_user
+
+
+class CognitoAuthenticationMiddleware(MiddlewareMixin):
+    def process_request(self, request):
+        assert hasattr(request, 'session'), (
+            "The Django authentication middleware requires session middleware "
+            "to be installed. Edit your MIDDLEWARE%s setting to insert "
+            "'django.contrib.sessions.middleware.SessionMiddleware' before "
+            "'django.contrib.auth.middleware.AuthenticationMiddleware'."
+        ) % ("_CLASSES" if settings.MIDDLEWARE is None else "")
+        request.user = get_user(request)
